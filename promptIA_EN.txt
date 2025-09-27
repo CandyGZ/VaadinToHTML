@@ -1,0 +1,176 @@
+Of course. Here is the translation of the technical document:
+
+Prompt for Replicating a Vaadin 8 UI in Static HTML
+PART 1: CREATING THE STATIC VISUAL MOCK-UP
+Role: You are an expert software engineering assistant specializing in application modernization and UI prototyping.
+
+Objective: Analyze the source code of a Vaadin 8 project and generate a static mock-up (HTML, CSS, and JavaScript) that faithfully replicates its user interface. The purpose is to create a visual prototype decoupled from the backend to facilitate a future frontend redesign. Then, transform this mock-up into a functional application by connecting it to a REST API.
+
+Context: I will provide you with access to the source code of a Vaadin 8 application. The task is to translate the Vaadin components and layouts into a structure of modular HTML files with dynamic loading.
+
+Detailed Steps to Follow:
+
+1. Exhaustive Analysis and Base Structure:
+
+Perform a complete analysis of the source code to identify the main UI class (annotated with @Theme and @Title) and all the View controllers that make up the application.
+
+Identify the main TabSheet and map all first-level tabs (e.g., "Administration", "Finance").
+
+For each main tab, investigate its corresponding controller to identify if it contains secondary TabSheets and map all of their sub-tabs. The goal is to create a complete navigation tree of the application before writing any code.
+
+Create the home.html file, which will be the entry point. This file must contain:
+
+The basic HTML structure (<!DOCTYPE>, <html>, <head>, <body>).
+
+The main navigation bar with <button> elements for each identified module.
+
+Empty <div> containers, one for each module, with a corresponding id.
+
+2. Style Extraction and Consolidation:
+
+Analyze the @Theme annotation to identify the theme name (e.g., "mytheme").
+
+Search for the .scss and .css files associated with that theme (e.g., mytheme.scss, styles.scss).
+
+Consolidate all relevant style rules into a single <style> tag within the <head> of the home.html file. The goal is to make the mock-up self-contained and not dependent on external CSS files. Adapt Vaadin styles into generic, reusable CSS classes (e.g., .layout-vertical, .layout-horizontal, .btn-primary).
+
+3. Creation of Partial Files (Modules):
+
+For each main tab, create a "partial" HTML file in a partials/ folder. Name the files descriptively (e.g., _admon.html, _finanzas.html).
+
+In home.html, modify the module container <div>s to include a data-include attribute that points to the corresponding partial file. Example: <div id="admon" class="tab-content" data-include="partials/_admon.html"></div>.
+
+4. Implementation of Dynamic Loading:
+
+In home.html, within a <script> tag, write a loadPartial(element) function that uses fetch() to asynchronously load the content of a partial file (obtained from the data-include attribute) into its container div.
+
+Implement an openTab(evt, tabName) function that is triggered when clicking on the main tabs. This function must:
+
+Hide all tab content divs.
+
+Show only the selected tab's div.
+
+Update the active classes on the buttons.
+
+Call loadPartial() to load the module's content if it has not yet been loaded.
+
+Ensure that the content of the first tab is loaded when the page starts.
+
+5. Content Generation for each Partial:
+
+For each partial file (e.g., _admon.html), analyze the corresponding Java controller (e.g., AdministracionController.java).
+
+Replicate the sub-tab structure: If the controller has a secondary TabSheet, create the same navigation structure with buttons and content divs within the partial file.
+
+Translate layouts and components:
+
+VerticalLayout and HorizontalLayout become <div class="layout-vertical"> and <div class="layout-horizontal">.
+
+TextField, PasswordField, ComboBox, DateField, TextArea, CheckBox become their HTML equivalents: <input>, <select>, <textarea>, <input type="checkbox">, each with its <label>.
+
+Grid or Table become an HTML <table> with a <thead> (including column headers) and an empty <tbody>.
+
+Button becomes <button>, applying CSS classes like btn-primary or btn-friendly based on its style in Vaadin (ValoTheme.BUTTON_PRIMARY, etc.).
+
+Add source code references: In each generated section, include a comment or a <span class="view-class"> that indicates the name of the .java file from which that part of the UI was extracted. This is crucial for traceability.
+
+Repeat step 5 for all tabs and sub-tabs identified in the initial navigation map.
+
+6. Final Verification and Completeness:
+
+Before finishing, perform a cross-check between the Vaadin code's navigation tree and the generated HTML mock-up.
+
+Confirm that every view and sub-view has been fully implemented. It is unacceptable to leave sections with placeholders, generic content, or comments like "content pending." The goal is a 1:1 replica of the UI's structure and components.
+
+Upon completion, you must deliver the complete home.html file and the partials/ folder with all the module HTML files.
+
+PART 2: TRANSFORMATION INTO A FUNCTIONAL APPLICATION (SPA)
+Objective: Convert the static mock-up into a functional Single-Page Application (SPA) by creating a REST API on the backend and connecting the frontend to it using JavaScript.
+
+Step 7: Creation of the REST API Layer (Backend)
+
+For each main module that handles data (e.g., Administration, Finance), create a Spring @RestController.
+
+Controller Pattern:
+
+Annotate the class with @RestController and @RequestMapping("/api/{resource-name}") (e.g., /api/privadas, /api/residentes).
+
+Inject the corresponding business Service (e.g., AdminService, EgresosService).
+
+Implement methods for CRUD operations, reusing the logic from existing services:
+
+@GetMapping: To get lists of entities (used to populate tables).
+
+@GetMapping("/{id}"): To get a specific entity (used to populate forms for editing).
+
+@PostMapping: To create a new entity. Use @RequestBody to receive the JSON object from the frontend.
+
+@PutMapping("/{id}"): To update an existing entity. Use @PathVariable and @RequestBody.
+
+@DeleteMapping("/{id}"): To delete an entity. Use @PathVariable.
+
+Step 8: Dynamic Frontend Connection (JavaScript)
+
+Modify the script in home.html to connect all UI elements (buttons, forms, tables) to the REST API endpoints created in the previous step.
+
+Script Structure:
+
+Refactor the partial loading logic. After loadPartial inserts a module's HTML, it should call an event binding function specific to that module (e.g., linkAdmonEvents(), linkFinanzasEvents()).
+
+Module Binding Pattern (e.g., linkAdmonEvents):
+
+Select Elements: Inside the function, get references to the key UI elements (save/edit/delete buttons, the table's <tbody>, form fields) using document.getElementById or querySelector.
+
+Define API Object: Create an api object containing async functions for each call to the module's REST API. Each function will use fetch() to communicate with the backend (e.g., api.getPrivadas(), api.savePrivada(data)).
+
+Define UI Logic: Create functions to manipulate the interface, such as:
+
+renderTabla(datos): Clears the <tbody> and fills it with new <tr> rows from the data received from the API.
+
+refrescarTabla(): Calls the GET function of the API and then renderTabla.
+
+limpiarFormulario(): Resets the values of the form fields.
+
+getFormData(): Collects the form values and returns them as a JavaScript object.
+
+Add Event Listeners:
+
+Add an addEventListener('click', ...) to each button (Save, Edit, Clear, Delete).
+
+The event's function should call the corresponding API function and, upon completion, update the UI (e.g., call refrescarTabla() and limpiarFormulario()).
+
+Add a listener to the table to handle clicks on rows (for editing) or on delete buttons.
+
+Initial Load: Call refrescarTabla() at the end of the binding function to populate the table with data as soon as the module is visible.
+
+Repeat this pattern for all modules and sub-modules of the application, ensuring that every button and form has its functionality connected.
+
+Step 9: Backend Cleanup and Strengthening (pom.xml)
+
+Once the Vaadin UI has been completely replaced and the application is functional via the REST API, it is crucial to clean up the pom.xml file to reflect the new architecture.
+
+Removal of Obsolete Dependencies:
+
+Remove all Vaadin dependencies, including vaadin-spring-boot-starter, vaadin-charts, and any other addons (pagedtable, easyuploads, etc.).
+
+Remove the <dependencyManagement> block if it only contained the vaadin-bom.
+
+Remove the vaadin-maven-plugin from the <plugins> section.
+
+Remove the Vaadin repositories (vaadin-addons, vaadin-directory, etc.) from the <repositories> section.
+
+Addition of Dependencies for a Modern REST API:
+
+Spring Boot DevTools: Add spring-boot-devtools to enable automatic reloading during development, improving productivity.
+
+API Documentation (SpringDoc): Add springdoc-openapi-ui to automatically generate a Swagger UI interface. This creates interactive documentation for all API endpoints, which is fundamental for frontend development and testing.
+
+JSON Web Tokens (JWT): Add the jjwt dependencies (jjwt-api, jjwt-impl, jjwt-jackson) to handle token creation and validation. This is essential for implementing a stateless security scheme appropriate for REST APIs.
+
+Step 10: Complete Functional Verification
+
+Before finishing, perform a final review of the entire script in home.html.
+
+Confirm that an event binding function (e.g., linkAdmonEvents, linkFinanzasEvents) has been created for each main module.
+
+Verify that none of these binding functions are empty or contain only placeholder comments. Each function must implement the fetch and addEventListener logic for the key functionalities of its respective module. The goal is an application where every part of the UI is interactive.

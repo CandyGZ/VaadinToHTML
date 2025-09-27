@@ -1,0 +1,111 @@
+Prompt para Replicar una UI de Vaadin 8 en HTML Estático
+
+**PARTE 1: CREACIÓN DE LA MAQUETA VISUAL ESTÁTICA**
+
+Rol: Eres un asistente de ingeniería de software experto, especializado en la modernización de aplicaciones y la creación de prototipos de UI.
+
+Objetivo: Analizar el código fuente de un proyecto Vaadin 8 y generar una maqueta estática (HTML, CSS y JavaScript) que replique fielmente su interfaz de usuario. El propósito es crear un prototipo visual desacoplado del backend para facilitar un futuro rediseño del frontend. Luego, transformar esa maqueta en una aplicación funcional conectándola a una API REST.
+
+Contexto: Te proporcionaré acceso al código fuente de una aplicación Vaadin 8. La tarea consiste en traducir los componentes y layouts de Vaadin a una estructura de archivos HTML modulares con carga dinámica.
+
+Pasos Detallados a Seguir:
+
+1. Análisis Exhaustivo y Estructura Base:
+    *   Realiza un análisis completo del código fuente para identificar la clase UI principal (anotada con `@Theme` y `@Title`) y todos los controladores de vista (`View`) que componen la aplicación.
+    *   Identifica el `TabSheet` principal y mapea **todas** las pestañas de primer nivel (ej. "Administración", "Finanzas").
+    *   Para cada pestaña principal, investiga su controlador correspondiente para identificar si contiene `TabSheet` secundarios y mapea **todas** sus sub-pestañas. El objetivo es crear un árbol de navegación completo de la aplicación antes de escribir código.
+    *   Crea el archivo `home.html` que será el punto de entrada. Este archivo debe contener:
+        *   La estructura HTML base (`<!DOCTYPE>`, `<html>`, `<head>`, `<body>`).
+        *   La barra de navegación principal con botones `<button>` para cada módulo identificado.
+        *   Contenedores `<div>` vacíos, uno para cada módulo, con un `id` correspondiente.
+
+Extracción y Consolidación de Estilos:
+
+Analiza la anotación @Theme para identificar el nombre del tema (ej. "mytheme").
+Busca los archivos .scss y .css asociados a ese tema (ej. mytheme.scss, styles.scss).
+Consolida todas las reglas de estilo relevantes en una única etiqueta <style> dentro del <head> del archivo home.html. El objetivo es que la maqueta no dependa de archivos CSS externos y sea autocontenida. Adapta los estilos de Vaadin a clases CSS genéricas y reutilizables (ej. .layout-vertical, .layout-horizontal, .btn-primary).
+Creación de Archivos Parciales (Módulos):
+
+Por cada pestaña principal, crea un archivo HTML "parcial" en una carpeta partials/. Nombra los archivos de forma descriptiva (ej. _admon.html, _finanzas.html).
+En home.html, modifica los <div> contenedores de los módulos para incluir un atributo data-include que apunte al archivo parcial correspondiente. Ejemplo: <div id="admon" class="tab-content" data-include="partials/_admon.html"></div>.
+Implementación de Carga Dinámica:
+
+En home.html, dentro de una etiqueta <script>, escribe una función loadPartial(element) que use fetch() para cargar de forma asíncrona el contenido de un archivo parcial (obtenido del atributo data-include) en su div contenedor.
+Implementa una función openTab(evt, tabName) que se active al hacer clic en las pestañas principales. Esta función debe:
+Ocultar todos los div de contenido de las pestañas.
+Mostrar solo el div de la pestaña seleccionada.
+Actualizar las clases active en los botones.
+Llamar a loadPartial() para cargar el contenido del módulo si aún no ha sido cargado.
+Asegúrate de que el contenido de la primera pestaña se cargue al iniciar la página.
+Generación de Contenido para cada Parcial:
+
+Para cada archivo parcial (ej. _admon.html), analiza el controlador Java correspondiente (ej. AdministracionController.java).
+Replica la estructura de sub-pestañas: Si el controlador tiene un TabSheet secundario, crea la misma estructura de navegación con botones y divs de contenido dentro del archivo parcial.
+Traduce los layouts y componentes:
+VerticalLayout y HorizontalLayout se convierten en <div class="layout-vertical"> y <div class="layout-horizontal">.
+TextField, PasswordField, ComboBox, DateField, TextArea, CheckBox se convierten en sus equivalentes HTML: <input>, <select>, <textarea>, <input type="checkbox">, cada uno con su <label>.
+Grid o Table se convierten en una <table> HTML con <thead> (incluyendo los encabezados de columna) y un <tbody> vacío.
+Button se convierte en <button>, aplicando clases CSS como btn-primary o btn-friendly según su estilo en Vaadin (ValoTheme.BUTTON_PRIMARY, etc.).
+Añade referencias al código fuente: En cada sección generada, incluye un comentario o un <span class="view-class"> que indique el nombre del archivo .java del cual se extrajo esa parte de la UI. Esto es crucial para la trazabilidad.
+Iteración y Completitud:
+    *   Repite el paso 5 para todas las pestañas y sub-pestañas identificadas en el mapa de navegación inicial.
+
+6. Verificación Final y Completitud:
+    *   Antes de finalizar, realiza una revisión cruzada entre el árbol de navegación del código Vaadin y la maqueta HTML generada.
+    *   Confirma que **cada vista y sub-vista** ha sido completamente implementada. Es inaceptable dejar secciones con marcadores de posición, contenido genérico o comentarios como "contenido pendiente". El objetivo es una réplica 1:1 de la estructura y componentes de la UI.
+
+Al finalizar, deberás entregar el archivo home.html completo y la carpeta partials/ con todos los archivos HTML de los módulos.
+
+---
+
+**PARTE 2: TRANSFORMACIÓN A UNA APLICACIÓN FUNCIONAL (SPA)**
+
+**Objetivo:** Convertir la maqueta estática en una Aplicación de Página Única (SPA) funcional, creando una API REST en el backend y conectando el frontend a ella usando JavaScript.
+
+**Paso 7: Creación de la Capa de API REST (Backend)**
+    *   Para cada módulo principal que maneje datos (ej. Administración, Finanzas), crea un `@RestController` de Spring.
+    *   **Patrón del Controlador:**
+        *   Anota la clase con `@RestController` y `@RequestMapping("/api/{nombre-recurso}")` (ej. `/api/privadas`, `/api/residentes`).
+        *   Inyecta el `Service` de negocio correspondiente (ej. `AdminService`, `EgresosService`).
+        *   Implementa métodos para las operaciones CRUD, reutilizando la lógica de los servicios existentes:
+            *   `@GetMapping`: Para obtener listas de entidades (usado para poblar tablas).
+            *   `@GetMapping("/{id}")`: Para obtener una entidad específica (usado para poblar formularios para edición).
+            *   `@PostMapping`: Para crear una nueva entidad. Usa `@RequestBody` para recibir el objeto JSON desde el frontend.
+            *   `@PutMapping("/{id}")`: Para actualizar una entidad existente. Usa `@PathVariable` y `@RequestBody`.
+            *   `@DeleteMapping("/{id}")`: Para eliminar una entidad. Usa `@PathVariable`.
+
+**Paso 8: Conexión Dinámica del Frontend (JavaScript)**
+    *   Modifica el script en `home.html` para conectar todos los elementos de la UI (botones, formularios, tablas) a los endpoints de la API REST creados en el paso anterior.
+    *   **Estructura del Script:**
+        *   Refactoriza la lógica de carga de parciales. Después de que `loadPartial` inserte el HTML de un módulo, debe llamar a una función de enlace de eventos específica para ese módulo (ej. `linkAdmonEvents()`, `linkFinanzasEvents()`).
+    *   **Patrón de Enlace por Módulo (ej. `linkAdmonEvents`):**
+        *   **Seleccionar Elementos:** Dentro de la función, obtén referencias a los elementos clave de la UI (botones de guardar/editar/eliminar, el `<tbody>` de la tabla, los campos del formulario) usando `document.getElementById` o `querySelector`.
+        *   **Definir Objeto API:** Crea un objeto `api` que contenga funciones `async` para cada llamada a la API REST del módulo. Cada función usará `fetch()` para comunicarse con el backend (ej. `api.getPrivadas()`, `api.savePrivada(data)`).
+        *   **Definir Lógica de UI:** Crea funciones para manipular la interfaz, como:
+            *   `renderTabla(datos)`: Limpia el `<tbody>` y lo rellena con nuevas filas `<tr>` a partir de los datos recibidos de la API.
+            *   `refrescarTabla()`: Llama a la función `GET` de la API y luego a `renderTabla`.
+            *   `limpiarFormulario()`: Resetea los valores de los campos del formulario.
+            *   `getFormData()`: Recolecta los valores del formulario y los devuelve como un objeto JavaScript.
+        *   **Añadir Event Listeners:**
+            *   Añade un `addEventListener('click', ...)` a cada botón (Guardar, Editar, Limpiar, Eliminar).
+            *   La función del evento debe llamar a la función de la API correspondiente y, tras completarse, actualizar la UI (ej. llamar a `refrescarTabla()` y `limpiarFormulario()`).
+            *   Añade un listener a la tabla para manejar los clics en las filas (para editar) o en los botones de eliminar.
+        *   **Carga Inicial:** Llama a `refrescarTabla()` al final de la función de enlace para poblar la tabla con datos tan pronto como el módulo sea visible.
+    *   Repite este patrón para **todos los módulos y submódulos** de la aplicación, asegurando que cada botón y formulario tenga su funcionalidad conectada.
+
+**Paso 9: Limpieza y Fortalecimiento del Backend (pom.xml)**
+    *   Una vez que la UI de Vaadin ha sido completamente reemplazada y la aplicación es funcional a través de la API REST, es crucial limpiar el archivo `pom.xml` para reflejar la nueva arquitectura.
+    *   **Eliminación de Dependencias Obsoletas:**
+        *   Elimina todas las dependencias de Vaadin, incluyendo `vaadin-spring-boot-starter`, `vaadin-charts`, y cualquier otro addon (`pagedtable`, `easyuploads`, etc.).
+        *   Elimina el bloque `<dependencyManagement>` si solo contenía el `vaadin-bom`.
+        *   Elimina el plugin `vaadin-maven-plugin` de la sección `<plugins>`.
+        *   Elimina los repositorios de Vaadin (`vaadin-addons`, `vaadin-directory`, etc.) de la sección `<repositories>`.
+    *   **Adición de Dependencias para una API REST Moderna:**
+        *   **Spring Boot DevTools:** Agrega `spring-boot-devtools` para habilitar la recarga automática durante el desarrollo, mejorando la productividad.
+        *   **Documentación de API (SpringDoc):** Agrega `springdoc-openapi-ui` para generar automáticamente una interfaz de Swagger UI. Esto crea una documentación interactiva para todos los endpoints de la API, lo cual es fundamental para el desarrollo y las pruebas del frontend.
+        *   **JSON Web Tokens (JWT):** Agrega las dependencias de `jjwt` (`jjwt-api`, `jjwt-impl`, `jjwt-jackson`) para manejar la creación y validación de tokens. Esto es esencial para implementar un esquema de seguridad sin estado (stateless) apropiado para las APIs REST.
+
+**Paso 10: Verificación Funcional Completa**
+    *   Antes de finalizar, realiza una revisión final de todo el script en `home.html`.
+    *   Confirma que se ha creado una función de enlace de eventos (ej. `linkAdmonEvents`, `linkFinanzasEvents`) para **cada módulo principal**.
+    *   Verifica que ninguna de estas funciones de enlace esté vacía o contenga solo comentarios de marcador de posición. Cada función debe implementar la lógica de `fetch` y `addEventListener` para las funcionalidades clave de su respectivo módulo. El objetivo es una aplicación donde cada parte de la UI es interactiva.
