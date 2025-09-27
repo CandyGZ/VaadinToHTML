@@ -1,4 +1,4 @@
-Prompt para Replicar una UI de Vaadin 8 en HTML Estático
+
 
 **PARTE 1: CREACIÓN DE LA MAQUETA VISUAL ESTÁTICA**
 
@@ -108,4 +108,5 @@ Al finalizar, deberás entregar el archivo home.html completo y la carpeta parti
 **Paso 10: Verificación Funcional Completa**
     *   Antes de finalizar, realiza una revisión final de todo el script en `home.html`.
     *   Confirma que se ha creado una función de enlace de eventos (ej. `linkAdmonEvents`, `linkFinanzasEvents`) para **cada módulo principal**.
+
     *   Verifica que ninguna de estas funciones de enlace esté vacía o contenga solo comentarios de marcador de posición. Cada función debe implementar la lógica de `fetch` y `addEventListener` para las funcionalidades clave de su respectivo módulo. El objetivo es una aplicación donde cada parte de la UI es interactiva.
