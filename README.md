@@ -15,7 +15,7 @@ Todos hemos estado ahí. Tienes una aplicación *legacy*. Es robusta, hace su tr
 El problema con las jaulas de oro es que, aunque son cómodas, siguen siendo jaulas. El acoplamiento entre la UI y el backend era total. El primer obstáculo, y el más frustrante, fue simplemente intentar que el proyecto compilara. No contábamos con el repositorio local de Maven, la famosa carpeta `.m2`, que contenía las dependencias originales. Al intentar descargarlas de nuevo, nos topamos con un muro:
 
 *   Algunas dependencias del `pom.xml` simplemente **ya no existían** en los repositorios públicos. Eran fantasmas digitales.
-*   Otras aparecían en la red, pero los repositorios de Vaadin de la época eran inestables y las llamadas de descarga simplemente fallaban.
+*   Otras aparecían en línea, pero los repositorios estaban desactualizados, no encontrábamos la versión exacta del proyecto, o incluso si los enlaces existían, no había archivos y las descargas simplemente fallaban.
 *   Nuestra reacción natural fue empezar a "parchear" el `pom.xml`. Intentamos subir versiones, bajar versiones, buscar reemplazos... y cada cambio era peor. Caímos en un infierno de dependencias del que era imposible salir.
 
 Fue en ese punto de frustración, con un proyecto que ni siquiera podíamos construir, que tomamos una decisión radical. Si no podíamos revivir el monolito, ¿por qué no extraíamos su alma —la lógica de negocio— y le construíamos un cuerpo nuevo?
